@@ -16,6 +16,7 @@ Tutor IA con seguimiento continuo: loop diario proactivo (briefing → sesión �
 | Nota | Contenido |
 |---|---|
 | [[APP Tutor IA/docs/propuesta\|docs/propuesta]] | ⭐ PROPUESTA COMPLETA: problema validado, los 7 módulos del motor pedagógico, arquitectura, roadmap F0-F4, riesgos |
+| [[APP Tutor IA/docs/f0-motor\|docs/f0-motor]] | ✅ F0 FUNCIONAL: motor pedagógico CLI (BKT + FSRS-lite + gates) con curso piloto de Premiere Pro — código en `motor/` |
 
 ## 📝 Investigación (barrido 2026-08-25, 4 subagentes)
 | Nota | Resumen |

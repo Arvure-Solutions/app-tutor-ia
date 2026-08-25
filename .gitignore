@@ -6,3 +6,5 @@ __pycache__/
 .env.local
 dist/
 build/
+estado_alumno.json
+__pycache__/

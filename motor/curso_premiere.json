@@ -1,0 +1,205 @@
+{
+  "curso": "Edición de video en Adobe Premiere Pro",
+  "nivel": "principiante-intermedio",
+  "lecciones": [
+    {
+      "id": "c01",
+      "titulo": "Interfaz, proyectos y ajustes",
+      "objetivo": "Moverse por el espacio de trabajo y crear/configurar un proyecto correctamente",
+      "prereqs": [],
+      "teoria": [
+        "Un proyecto (.prproj) NO contiene video: contiene referencias a tus archivos. Si movés o borrás los originales, se desconectan (offline media).",
+        "Los 4 paneles clave: Project (material), Source Monitor (previsualizar crudo), Program Monitor (la secuencia final), Timeline (donde se edita).",
+        "La secuencia debe crearse con los mismos ajustes que tu footage principal (resolución y fps); arrastrar el primer clip al ícono 'New Sequence From Clip' lo hace automático.",
+        "Workspaces (Editing, Color, Audio...) reordenan paneles para cada tarea."
+      ],
+      "practica": "Crear un proyecto, importar 3 clips cualesquiera y armar una secuencia desde el primero. Renombrarla 'test_f0'.",
+      "preguntas": [
+        {"q": "¿El archivo .prproj contiene el video dentro?", "a": "No: solo referencias a los archivos originales.", "claves": ["referencia", "no"], "pistas": ["¿Qué pasa si movés el archivo original de carpeta?"]},
+        {"q": "Para qué sirve el Source Monitor vs el Program Monitor", "a": "Source = ver/preparar clips crudos antes de editarlos; Program = previsualizar la secuencia que estás armando.", "claves": ["crudo", "secuencia"], "pistas": ["Uno muestra el clip original, otro muestra TU edición."]},
+        {"q": "Manera más rápida de crear una secuencia con ajustes correctos para tu material", "a": "Arrastrar el primer clip sobre el ícono 'New Sequence From Clip' (o click derecho sobre el clip).", "claves": ["from clip", "arrastrar"], "pistas": ["Usás el primer clip como plantilla."]}
+      ]
+    },
+    {
+      "id": "c02",
+      "titulo": "Importar y organizar material",
+      "objetivo": "Ingestar footage y tenerlo encontrable cuando el proyecto crece",
+      "prereqs": ["c01"],
+      "teoria": [
+        "Import: doble click en panel Project o Cmd/Ctrl+I. Premiere acepta casi todo pero los formatos de cámara (H.264/H.265 largoGOP) castigan la máquina.",
+        "Bins = carpetas dentro del proyecto. Organizar por tipo (A-roll, B-roll, audio, gráficos) o por escena.",
+        "Proxy workflow: generar proxies livianos (ProRes Proxy) para editar fluido con 4K/H.265 y volver al full-res al exportar.",
+        "Labels de color y 'List' view con columnas permiten filtrar rápido."
+      ],
+      "practica": "Importar material real, crear bins A-Roll/B-Roll/Audio y etiquetar con colores distintos.",
+      "preguntas": [
+        {"q": "Qué son los bins y para qué sirven", "a": "Carpetas internas del panel Project para organizar el material.", "claves": ["carpeta", "organiz"]},
+        {"q": "Cuándo conviene trabajar con proxies", "a": "Con footage pesado (4K, H.265, largoGOP): editás con copias livianas y exportás desde los originales.", "claves": ["proxy", "pesado", "liviano"]},
+        {"q": "Si un clip aparece 'Media Offline', ¿qué pasó?", "a": "Se rompió la referencia: el archivo original fue movido, renombrado o borrado.", "claves": ["movido", "renombrado", "borrado", "ruta"]}
+      ]
+    },
+    {
+      "id": "c03",
+      "titulo": "Montaje básico: cortes y trim",
+      "objetivo": "Armar la primera historia: seleccionar, cortar, quitar y cerrar huecos",
+      "prereqs": ["c02"],
+      "teoria": [
+        "Flujo clásico: In/Out en Source (I/O) → insert (,) u overwrite (.) al timeline.",
+        "Corte rápido: Razor (C) o mejor: jugar con In/Out en Program y extraer (;) / extract (').",
+        "Ripple delete (Shift+Delete) quita el clip Y cierra el hueco; delete normal deja gap.",
+        "Trim: arrastrar bordes del clip. Trim Edit mode permite ajustar frame a frame.",
+        "Q/W = trim al playhead (ripple trim previous/next edit to playhead): el atajo que más acelera."
+      ],
+      "practica": "De 3 clips crudos dejar solo los mejores momentos usando Q/W y ripple delete, logrando una mini-secuencia sin huecos.",
+      "preguntas": [
+        {"q": "Diferencia entre insert (,) y overwrite (.)", "a": "Insert empuja el material posterior; overwrite pisa lo que hay en esa posición.", "claves": ["empuja", "pisa", "sobrescribe"]},
+        {"q": "Atajo para borrar un clip y que se cierren los huecos", "a": "Ripple delete: Shift+Delete.", "claves": ["shift+delete", "shift supr"]},
+        {"q": "Qué hacen Q y W en el timeline", "a": "Ripple trim al playhead: recortan hasta donde está el cursor cerrando el hueco (W el borde derecho, Q el izquierdo).", "claves": ["trim", "playhead"]}
+      ]
+    },
+    {
+      "id": "c04",
+      "titulo": "Herramientas de timeline avanzadas",
+      "objetivo": "Razor, rate stretch, slip/slide y cuándo usar cada uno",
+      "prereqs": ["c03"],
+      "teoria": [
+        "Razor (C) corta; con V vuelvo a selección. Doble razor = add edit (Cmd/Ctrl+K) en el playhead.",
+        "Rate Stretch (R): estira/encoge el clip cambiando su velocidad para llenar un hueco exacto.",
+        "Slip: mover el CONTENIDO dentro del clip sin moverlo en el timeline (Y). Slide: mover el CLIP y que los vecinos se ajusten (U).",
+        "Enable/disable de clip (Cmd/Ctrl+E) para probar versiones sin borrar."
+      ],
+      "practica": "En la secuencia anterior: hacer un add edit, cambiar velocidad de un plano con Rate Stretch para calzar 2 segundos exactos y probar un disable.",
+      "preguntas": [
+        {"q": "Diferencia entre slip y slide", "a": "Slip cambia qué parte del clip se ve (contenido) sin moverlo; Slide mueve el clip entero y sus vecinos compensan.", "claves": ["contenido", "mueve"], "pistas": ["Uno es 'qué se ve adentro', otro es 'dónde está parado'."]},
+        {"q": "Atajo para cortar en el playhead sin herramienta razor", "a": "Add Edit: Cmd/Ctrl+K.", "claves": ["ctrl+k", "cmd+k", "add edit"]},
+        {"q": "Querés que un plano dure exactamente el tiempo del voice-over: ¿qué herramienta?", "a": "Rate Stretch (R): ajusta duración cambiando la velocidad.", "claves": ["rate", "stretch", "velocidad"]}
+      ]
+    },
+    {
+      "id": "c05",
+      "titulo": "Transiciones y efectos esenciales",
+      "objetivo": "Transiciones que sirven (y no abusar) + efectos fijos vs aplicados",
+      "prereqs": ["c03"],
+      "teoria": [
+        "Regla editorial: el corte duro es LA transición. Dissolve (Cross Dissolve, Cmd/Ctrl+D) para paso de tiempo; Dip to Black para cierre de capítulo.",
+        "Las transiciones necesitan 'handles': media extra antes/después del corte; si no hay, Premiere te avisa ('insufficient media').",
+        "Efectos fijos: Motion, Opacity, Time Remapping están siempre en Effect Controls. Los demás van desde Effects panel.",
+        "Adjustment Layer: efecto aplicado a una capa que afecta a todos los clips debajo (para grades o viñetas globales)."
+      ],
+      "practica": "Aplicar Cross Dissolve entre dos planos, un Dip to Black al final y montar un Adjustment Layer con un leve zoom global.",
+      "preguntas": [
+        {"q": "Por qué a veces Premiere no deja aplicar una transición entre dos clips", "a": "Faltan handles: no hay media suficiente antes/después del corte para el solapamiento.", "claves": ["handle", "media", "solap"]},
+        {"q": "Atajo del cross dissolve y cuál es SU uso legítimo", "a": "Cmd/Ctrl+D; sirve para indicar paso de tiempo, no para 'arreglar' un corte feo.", "claves": ["ctrl+d", "tiempo"]},
+        {"q": "Qué es un adjustment layer y caso de uso típico", "a": "Clip transparente cuyos efectos afectan a todo lo de abajo; típico para color grading global o vignette.", "claves": ["transparente", "abajo", "global"]}
+      ]
+    },
+    {
+      "id": "c06",
+      "titulo": "Audio: niveles, fades y esencial de sonido",
+      "objetivo": "Que suene limpio: gain, normalizado, keyframes de volumen y J/L cuts",
+      "prereqs": ["c03"],
+      "teoria": [
+        "Objetivo broadcast: diálogo alrededor de -6 dB a -12 dB, picos bajo 0 dB (nunca clippear).",
+        "Gain (click derecho > Audio Gain, G) ajusta nivel general; Audio Clip Mixer / keyframes (Pen sobre la línea amarilla) ajustan por momento.",
+        "Auto Match Loudness (Essential Sound > Dialogue) normaliza a -23 LUFS de un tirón.",
+        "J-cut (audio entra antes que el video) y L-cut (audio sigue después): la base del ritmo conversacional."
+      ],
+      "practica": "Normalizar el audio de diálogo con Essential Sound, bajar música con keyframes bajo las voces y hacer un L-cut entre dos planos.",
+      "preguntas": [
+        {"q": "Nivel aproximado al que debe vivir el diálogo", "a": "Entre -6 y -12 dB de pico promedio, nunca tocando 0 dB.", "claves": ["-6", "-12", "0"]},
+        {"q": "Qué es un L-cut", "a": "El audio del plano siguiente entra mientras todavía se ve el plano anterior (audio sale 'en L').", "claves": ["audio", "antes", "sigue"], "pistas": ["Pensá en la forma de la letra en el timeline."]},
+        {"q": "Diferencia entre Audio Gain y keyframes de volumen", "a": "Gain = nivel global del clip; keyframes = automatización del volumen a lo largo del tiempo.", "claves": ["global", "tiempo"]}
+      ]
+    },
+    {
+      "id": "c07",
+      "titulo": "Keyframes y animación de motion",
+      "objetivo": "Animar escala, posición y opacidad con curvas decentes",
+      "prereqs": ["c04"],
+      "teoria": [
+        "Effect Controls > Motion: stopwatches activan animación; cada cambio con stopwatch activo crea keyframe.",
+        "Temporal interpolation: Linear (robótico), Ease In/Out (click derecho > Temporal Interpolation) para arranques/frenados naturales.",
+        "Ken Burns: scale+position animados sobre foto/plano fijo.",
+        "Motion blur fake: Directional Blur progresivo en movimientos rápidos."
+      ],
+      "practica": "Hacer un Ken Burns sobre una imagen (zoom lento con Ease Out) y una entrada de título con fade+desplazamiento.",
+      "preguntas": [
+        {"q": "Qué botón activa la animación de una propiedad", "a": "El stopwatch/reloj de la propiedad en Effect Controls: sin él, los cambios cambian el valor global.", "claves": ["stopwatch", "reloj", "keyframe"]},
+        {"q": "Keyframes lineales vs ease in/out: diferencia visual", "a": "Linear mueve a velocidad constante (mecánico); ease acelera/desacelera en los extremos (natural).", "claves": ["constante", "acelera"]},
+        {"q": "Cómo se llama el efecto de zoom lento sobre foto fija", "a": "Ken Burns.", "claves": ["ken burns"]}
+      ]
+    },
+    {
+      "id": "c08",
+      "titulo": "Color con Lumetri (fundamentos)",
+      "objetivo": "Balancear y dar look sin destrozar la imagen",
+      "prereqs": ["c05"],
+      "teoria": [
+        "Orden profesional: primero corrección (exposición/balance, Scope RGB: piel cerca de la línea de piel), después look/grade.",
+        "Lumetri Basic: Exposure/Contrast/Highlights/Shadows/Whites/Blacks. White Balance: Temperature/Tint con pipeta sobre gris neutro.",
+        "Creative > Look = LUTs; Intensity baja a gusto. Un LUT asume imagen ya balanceada.",
+        "Copiar grade: Effect Controls > Lumetri > right click > Copy; o Save Preset."
+      ],
+      "practica": "Corregir un plano subexpuesto con scopes abiertos y aplicarle un Look al 60% de intensidad; copiar el Lumetri a un plano del mismo set.",
+      "preguntas": [
+        {"q": "Orden correcto: ¿corregir primero o aplicar LUT primero?", "a": "Primero corrección/balance; el LUT asume una imagen ya corregida.", "claves": ["corregir", "primero", "antes"]},
+        {"q": "Para qué sirve la pipeta de White Balance", "a": "Click sobre un gris/blanco neutro del plano para neutralizar la dominante de color.", "claves": ["gris", "neutro", "balance"]},
+        {"q": "Cómo llevás el mismo grade a otros clips rápido", "a": "Copiar el efecto Lumetri (copy/paste attributes) o guardarlo como preset.", "claves": ["copiar", "preset", "paste"]}
+      ]
+    },
+    {
+      "id": "c09",
+      "titulo": "Títulos y gráficos esenciales",
+      "objetivo": "Textos pro: Essential Graphics, lower thirds y safe zones",
+      "prereqs": ["c07"],
+      "teoria": [
+        "Type Tool (T) o Essential Graphics panel; los títulos viven como Graphic clips en el timeline (editables dobles).",
+        "Lower third: texto + fondo/barra, entra con animación simple (position+opacity, 15-20 frames).",
+        "Safe zones: título fuera del 90% del frame puede cortarse en TV/redes verticales.",
+        "Master Styles: estilos reutilizables que actualizan todos los textos vinculados."
+      ],
+      "practica": "Crear un lower third con nombre y rol, animarlo entrando y salir, y guardarlo como preset de Essential Graphics.",
+      "preguntas": [
+        {"q": "Qué son los safe titles y por qué importa en redes", "a": "Zonas seguras: mantener texto dentro del 80-90% central porque crops verticales/TV recortan bordes.", "claves": ["recort", "borde", "segura"]},
+        {"q": "Cómo editás un texto ya puesto en el timeline", "a": "Doble click sobre el graphic clip (o T sobre él) abre la edición directa/Essential Graphics.", "claves": ["doble click", "essential graphics"]},
+        {"q": "Ventaja de Master Styles en textos", "a": "Cambiar la fuente/color en el estilo actualiza todos los títulos vinculados a la vez.", "claves": ["todos", "actualiza", "estilo"]}
+      ]
+    },
+    {
+      "id": "c10",
+      "titulo": "Multicámara y sincronización",
+      "objeto": "Trabajar con 2+ cámaras y audio común",
+      "prereqs": ["c06"],
+      "teoria": [
+        "Seleccionar clips > right click > Create Multi-Camera Source Sequence: sincroniza por audio (waveforms) o timecode.",
+        "Multicam en timeline: Nested/Multicam clip arriba, Program en modo multi-cam (Shift+0), cortar en vivo con números 1-9 durante reproducción.",
+        "Desync típico: cámaras sin timecode común → sync SIEMPRE por audio de referencia.",
+        "Flatpak del ángulo: cambiar ángulo puntual = right click > Multi-Camera > Frame."
+      ],
+      "practica": "Con dos videos de celular grabando lo mismo (con sonido ambiente): crear multicam por waveform y hacer un corte en vivo por ángulo.",
+      "preguntas": [
+        {"q": "Método de sincronía más confiable entre cámaras", "a": "Por audio/waveform de referencia (o clapper/timecode si hay).", "claves": ["audio", "waveform", "timecode"]},
+        {"q": "Cómo se corta en vivo entre ángulos", "a": "Program monitor en modo Multicam + teclas numéricas 1-9 mientras reproduce.", "claves": ["multicam", "numer", "vivo"]},
+        {"q": "Qué es un multicam source sequence", "a": "Secuencia contenedora que agrupa los ángulos sincronizados como un solo clip editable.", "claves": ["contenedor", "angulo", "sincron"]}
+      ]
+    },
+    {
+      "id": "c11",
+      "titulo": "Exportación y entrega",
+      "objetivo": "Exportar según destino sin perder calidad ni tiempo",
+      "prereqs": ["c01", "c03", "c08"],
+      "teoria": [
+        "Export (Cmd/Ctrl+M): H.264 para casi todo; YouTube 1080p ≈ VBR 1-pass 16-24 Mbps; 4K 45-68 Mbps.",
+        "Match settings: usar 'Match Source' evita rescalados accidentales; revisar fps del destino (redes aman 30/60).",
+        "Exportar tramos: In/Out en la secuencia limitan el rango. Cola (Queue) va a Media Encoder para seguir editando.",
+        "Checklist final: sin gaps (Sequence > Close Gap check), audio picos <0dB, safe zones, y un render preview antes del export largo."
+      ],
+      "practica": "Exportar la mini-secuencia del curso en H.264 1080p con bitrate adecuado y verificar peso/calidad resultante.",
+      "preguntas": [
+        {"q": "Formato y codec por defecto para entregar a redes", "a": "H.264 (MP4), Match Source, VBR con bitrate según resolución (16-24 Mbps @1080p).", "claves": ["h.264", "mp4", "match"]},
+        {"q": "Para qué sirve mandar el export a la cola de Media Encoder", "a": "Exporta en segundo plano mientras seguís editando en Premiere.", "claves": ["segundo plano", "cola", "queue"]},
+        {"q": "Tres checks antes de dar Export final", "a": "Sin gaps/huecos, audio sin clipping (<0 dB), rango In/Out correcto (y safe zones).", "claves": ["gap", "audio", "in/out", "rango"]}
+      ]
+    }
+  ]
+}

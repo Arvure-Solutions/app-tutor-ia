@@ -16,4 +16,13 @@
 
 ## Estado
 
-🌱 Fase propuesta / investigación completada (2026-08-25). Próximo paso: **F0** — motor pedagógico en CLI.
+🚧 **F0 funcional** (2026-08-25): motor pedagógico CLI con curso piloto de Premiere Pro.
+
+```bash
+cd motor
+python3 tutor.py clase    # próxima lección desbloqueada
+python3 tutor.py sesion   # sesión retrieval-first (repasos FSRS + nuevas)
+python3 tutor.py estado   # maestría por lección
+```
+
+Próximo paso: **F1** — popups/check-ins desktop + empaquetador md→curso.
