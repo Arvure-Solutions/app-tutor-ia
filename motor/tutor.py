@@ -7,16 +7,24 @@ from datetime import timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from modelo import (UMBRAL_MAESTRIA, cargar_estado, clave_tarjeta, guardar_estado,
-                    marcar_vista, nuevo_estado, preguntas_de_leccion,
-                    registrar_respuesta, resumen_alumno, tarjetas_vencidas)
+from modelo import (ESTADO_PATH, UMBRAL_MAESTRIA, cargar_estado, clave_tarjeta,
+                    guardar_estado, marcar_vista, nuevo_estado,
+                    preguntas_de_leccion, registrar_respuesta, resumen_alumno,
+                    tarjetas_vencidas, validar_curso, evaluar_respuesta,
+                    MatcherClaves, diagnosticar, leccion_siguiente,
+                    orden_topologico, prereqs_cumplidos)
 
 RAIZ = Path(__file__).resolve().parent
 CURSO_PATH = RAIZ / "curso_premiere.json"
 
 
 def cargar_curso():
-    return json.loads(CURSO_PATH.read_text(encoding="utf-8"))
+    raw = json.loads(CURSO_PATH.read_text(encoding="utf-8"))
+    problema = validar_curso(raw)
+    if problema:
+        print(f"❌ Curso inválido: {problema}", file=sys.stderr)
+        sys.exit(1)
+    return raw
 
 
 def leccion_por_id(curso, cid):
@@ -26,13 +34,9 @@ def leccion_por_id(curso, cid):
     return None
 
 
-def normalizar(s):
-    return re.sub(r"[^a-z0-9 ]", "", s.lower())
-
-
-def evaluar_respuesta(pregunta, respuesta):
-    texto = normalizar(respuesta)
-    return any(normalizar(clave) in texto for clave in pregunta.get("claves", []))
+def evaluar_respuesta_cli(pregunta, respuesta):
+    acierto, conf, razon = evaluar_respuesta(pregunta, respuesta, MatcherClaves())
+    return acierto
 
 
 def pedir(prompt):
@@ -60,11 +64,11 @@ def preguntar(estado, lec, idx, primera_vez):
     p = lec["preguntas"][idx]
     print(f"\n  ❓ {p['q']}")
     r1 = pedir("  tu respuesta > ")
-    ok = evaluar_respuesta(p, r1)
+    ok = evaluar_respuesta_cli(p, r1)
     if not ok:
         print("  💡 pista:", p.get("pistas", ["repasá la teoría de la clase"])[0])
         r2 = pedir("  otra chance > ")
-        if evaluar_respuesta(p, r2):
+        if evaluar_respuesta_cli(p, r2):
             registrar_respuesta(estado, lec["id"], idx, True, grado=1)
             print("  ✔ mejoró con la pista. Vuelve a repaso pronto.")
             return
@@ -99,7 +103,7 @@ def cmd_estado(estado, curso):
 def cmd_clase(estado, curso, cid=None):
     if estado is None:
         estado = nuevo_estado()
-    lec = leccion_por_id(curso, cid) if cid else __import__("modelo").leccion_siguiente(curso, estado)
+    lec = leccion_por_id(curso, cid) if cid else leccion_siguiente(curso, estado)
     if lec is None:
         print("\n  Nada desbloqueado: primero repasá lo vencido (tutor.py sesion).\n")
         return
@@ -115,13 +119,17 @@ def cmd_sesion(estado, curso, solo_repaso=False):
         return
     vencidas = tarjetas_vencidas(curso, estado)
     cola = list(vencidas[:4])
-    lec = __import__("modelo").leccion_siguiente(curso, estado) if not solo_repaso else None
+    lec = leccion_siguiente(curso, estado) if not solo_repaso else None
     if lec and not solo_repaso:
         cola += [(lec["id"], i) for i in preguntas_de_leccion(curso, estado, lec, cantidad=3)]
     if not cola:
         print("\n  ✨ Nada vencido y sin lección nueva disponible. Volvé mañana o abrí otra clase.\n")
         return
-    random.shuffle(cola[4:]) if len(cola) > 4 else None
+    # mezclar solo las NUEVAS (después de las vencidas) para variar el orden
+    fijas = cola[:4]
+    nuevas = cola[4:]
+    random.shuffle(nuevas)
+    cola = fijas + nuevas
     print(f"\n  Sesión retrieval-first: {len(vencidas)} repasos vencidos"
           + (f" + nuevas de {lec['titulo']}" if lec else ""))
     for n, (cid, idx) in enumerate(cola, 1):
@@ -134,12 +142,34 @@ def cmd_sesion(estado, curso, solo_repaso=False):
     cmd_estado(estado, curso)
 
 
+def _evaluar_desde_cli(lec, pregunta):
+    """Adaptador CLI para diagnosticar(): pide la respuesta por stdin."""
+    print(f"\n  [diagnóstico] {lec['titulo']}")
+    print(f"  ❓ {pregunta['q']}")
+    r = pedir("  tu respuesta > ")
+    acierto = evaluar_respuesta_cli(pregunta, r)
+    if not acierto:
+        print(f"  (respuesta esperada: {pregunta['a']})")
+    return {"acierto": acierto}
+
+
+def cmd_diagnostico(estado, curso):
+    if estado is None:
+        estado = nuevo_estado("diagnostico")
+    resultados = diagnosticar(curso, estado, _evaluar_desde_cli, rng=random)
+    aciertos = sum(1 for *_, a in resultados if a)
+    print(f"\n  🩺 Diagnóstico: {aciertos}/{len(resultados)} lecciones ya dominadas.")
+    print("  Lecciones saltadas por placement:", aciertos)
+    guardar_estado(estado)
+    cmd_estado(estado, curso)
+
+
 def cmd_demo(estado, curso, dias=5):
     print(f"\n  Simulando {dias} días de un alumno real...\n")
     if estado is None:
         estado = nuevo_estado("demo")
     random.seed(7)
-    from modelo import _ahora, fsrs_lite_programar, tarjeta_nueva, prereqs_cumplidos
+    from modelo import _ahora, fsrs_lite_programar, tarjeta_nueva, bkt_actualizar
     for dia in range(dias):
         for lec in curso["lecciones"]:
             c = estado["conceptos"].setdefault(lec["id"], {"bkt": 0.15, "visto": False, "intentos": 0, "aciertos": 0})
@@ -159,7 +189,6 @@ def cmd_demo(estado, curso, dias=5):
                 grado = 2 if correcto else 0
                 estado["conceptos"][cid]["intentos"] += 1
                 estado["conceptos"][cid]["aciertos"] += 1 if correcto else 0
-                from modelo import bkt_actualizar
                 estado["conceptos"][cid]["bkt"] = bkt_actualizar(estado["conceptos"][cid]["bkt"], correcto)
                 fsrs_lite_programar(t, grado)
                 estado["historia"].append({"t": f"dia{dia}", "tarjeta": k,
@@ -172,14 +201,19 @@ def cmd_demo(estado, curso, dias=5):
 
 def main():
     parser = argparse.ArgumentParser(description="Tutor IA F0 — motor pedagógico CLI")
-    parser.add_argument("comando", choices=["estado", "clase", "sesion", "repaso", "demo", "reset"],
+    parser.add_argument("comando", choices=["estado", "clase", "sesion", "repaso", "diagnostico", "demo", "reset"],
                         help="qué hacer")
     parser.add_argument("--id", help="id de lección para 'clase' (ej: c03)")
     parser.add_argument("--dias", type=int, default=5, help="días a simular en 'demo'")
     args = parser.parse_args()
 
     curso = cargar_curso()
-    estado = cargar_estado()
+    estado = None
+    try:
+        estado = cargar_estado()
+    except RuntimeError as exc:
+        print(f"⚠️  {exc}", file=sys.stderr)
+        sys.exit(1)
 
     if args.comando == "estado":
         cmd_estado(estado, curso)
@@ -187,6 +221,8 @@ def main():
         cmd_clase(estado, curso, args.id)
     elif args.comando in ("sesion", "repaso"):
         cmd_sesion(estado, curso, solo_repaso=(args.comando == "repaso"))
+    elif args.comando == "diagnostico":
+        cmd_diagnostico(estado, curso)
     elif args.comando == "demo":
         cmd_demo(estado, curso, args.dias)
     elif args.comando == "reset":

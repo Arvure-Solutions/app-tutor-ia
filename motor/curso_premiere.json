@@ -168,7 +168,7 @@
     {
       "id": "c10",
       "titulo": "Multicámara y sincronización",
-      "objeto": "Trabajar con 2+ cámaras y audio común",
+      "objetivo": "Trabajar con 2+ cámaras y audio común",
       "prereqs": ["c06"],
       "teoria": [
         "Seleccionar clips > right click > Create Multi-Camera Source Sequence: sincroniza por audio (waveforms) o timecode.",
