@@ -69,9 +69,46 @@ python3 tutor.py demo --dias 6     # simula un alumno
 python3 tutor.py reset             # borra progreso (ahora sin crashear)
 ```
 
-## Pendientes hacia F1
+## F1 — Capa LLM pluggable (2026-08-27)
 
-- Corrección semántica con LLM (hoy: matching por claves; la interfaz ya está lista)
-- Popup/check-in desktop (F1) y voz (F2)
+Hace que el tutor deje de ser "app de quiz" y empiece a corregir con criterio
+semántico + generar pistas socráticas, **con costo cero y sin cargar la máquina**.
+
+- **`motor/llm.py`:** interfaz `LLMClient` con dos implementaciones:
+  - `MockLLMClient` (default): heurística offline sobre teoría+claves del curso
+    (filtra stopwords, exige palabras sustantivas ≥4 letras para el solap
+    semántico). Cero red, cero recursos.
+  - `HTTPLLMClient`: OpenAI-compatible (`/chat/completions`, `response_format`
+    json). Cubre Ollama, Groq, OpenAI, Together, etc.
+- **Factory `get_client()` por env:** si `TUTOR_LLM` no está seteado → Mock.
+  Para usar un modelo real solo se setean env vars (sin tocar código):
+  `TUTOR_LLM=http`, `TUTOR_LLM_BASE_URL`, `TUTOR_LLM_MODEL`, `TUTOR_LLM_API_KEY`.
+- **`EstrategiaLLM(EstrategiaEvaluacion)`:** usa el cliente para grading
+  semántico + pista; **fallback automático al matcher por claves** si la
+  llamada HTTP falla (red caída, key inválida, modelo ausente). Nunca mudo.
+- **CLI:** default ya usa `EstrategiaLLM`; flags `--matcher` (fuerza claves
+  viejas) y `--http` (fuerza backend real) para comparar.
+
+Uso:
+```bash
+cd motor
+python3 -m pytest tests/ -q          # 32 tests verdes
+
+# Default: MockLLM offline (semántico barato, $0, 0 recursos)
+python3 tutor.py sesion
+
+# Igual que F0 (solo matching por claves)
+python3 tutor.py sesion --matcher
+
+# Con modelo real (requiere Ollama/Groq/OpenAI en env; cae al matcher si falla)
+TUTOR_LLM=http TUTOR_LLM_BASE_URL=http://localhost:11434/v1 TUTOR_LLM_MODEL=llama3.1 \
+  python3 tutor.py sesion --http
+```
+
+## Pendientes hacia F2
+
+- Voz / check-in desktop (loop diario proactivo)
 - Empaquetador md→curso: `motor/empaquetar.py` ya existe en el repo (md → curso JSON)
+- Métricas de retención y reporte al alumno
+
 

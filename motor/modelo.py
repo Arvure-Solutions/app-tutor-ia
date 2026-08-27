@@ -391,3 +391,36 @@ def orden_topologico(curso):
     if len(orden) != len(grado):
         raise ValueError("ciclo de prerrequisitos: no hay orden topológico")
     return orden
+
+
+# ---------------------------------------------------------------------------
+# Estrategia LLM (F1) — usa un LLMClient para grading semántico + pista,
+# con fallback automático al matcher por claves si el LLM falla.
+# ---------------------------------------------------------------------------
+
+
+class EstrategiaLLM(EstrategiaEvaluacion):
+    def __init__(self, client=None, matcher=None):
+        # import perezoso para no acoplar modelo.py a llm.py en los tests
+        if client is None:
+            from llm import get_client
+            client = get_client()
+        self.client = client
+        self.matcher = matcher or MatcherClaves()
+
+    def evaluar(self, pregunta, respuesta, leccion=None):
+        # El matcher solo necesita pregunta+respuesta; el LLM puede usar leccion.
+        try:
+            if leccion is not None and hasattr(self.client, "grade"):
+                g = self.client.grade(leccion, pregunta, respuesta)
+                return g.acierto, g.confianza, g.razon, g.fuente
+        except Exception as exc:  # red caída, JSON roto, modelo ausente → matcher
+            return (*self.matcher.evaluar(pregunta, respuesta),
+                    f"matcher-fallback ({type(exc).__name__})")
+
+    def pista(self, leccion, pregunta, respuesta):
+        try:
+            return self.client.pista(leccion, pregunta, respuesta)
+        except Exception:
+            pistas = pregunta.get("pistas")
+            return pistas[0] if pistas else leccion["teoria"][0]

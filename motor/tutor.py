@@ -38,9 +38,37 @@ def leccion_por_id(curso, cid):
     return None
 
 
-def evaluar_respuesta_cli(pregunta, respuesta):
-    acierto, conf, razon = evaluar_respuesta(pregunta, respuesta, MatcherClaves())
-    return acierto
+def evaluar_respuesta_cli(pregunta, respuesta, lec=None):
+    """Devuelve (acierto, confianza, razon, fuente). Por defecto usa EstrategiaLLM
+    (MockLLMClient offline); si se activa TUTOR_LLM=http usa un modelo real y
+    cae al matcher si la llamada falla."""
+    res = estrategia().evaluar(pregunta, respuesta, lec)
+    if len(res) == 4:
+        return res
+    # matcher devuelve 3-tuple
+    acierto, conf, razon = res
+    return acierto, conf, razon, "matcher"
+
+
+_estrategia = None
+
+
+def estrategia():
+    global _estrategia
+    if _estrategia is None:
+        if getattr(estrategia, "_forzar", None) == "matcher":
+            from modelo import MatcherClaves, EstrategiaEvaluacion
+            class _M(EstrategiaEvaluacion):
+                def evaluar(self, pregunta, respuesta, leccion=None):
+                    return (*MatcherClaves().evaluar(pregunta, respuesta), "matcher")
+            _estrategia = _M()
+        elif getattr(estrategia, "_forzar", None) == "http":
+            import os
+            os.environ["TUTOR_LLM"] = "http"
+            _estrategia = EstrategiaLLM()
+        else:
+            _estrategia = EstrategiaLLM()
+    return _estrategia
 
 
 def pedir(prompt):
@@ -68,12 +96,12 @@ def preguntar(estado, lec, idx, primera_vez):
     p = lec["preguntas"][idx]
     print(f"\n  ❓ {p['q']}")
     r1 = pedir("  tu respuesta > ")
-    ok = evaluar_respuesta_cli(p, r1)
-    if not ok:
-        pistas = p.get("pistas", []) or ["repasá la teoría de la clase"]
-        print("  💡 pista:", pistas[0])
+    acierto, conf, razon, fuente = evaluar_respuesta_cli(p, r1, lec)
+    if not acierto:
+        pista = estrategia().pista(lec, p, r1)
+        print(f"  💡 pista ({fuente}): {pista}")
         r2 = pedir("  otra chance > ")
-        if evaluar_respuesta_cli(p, r2):
+        if evaluar_respuesta_cli(p, r2, lec)[0]:
             registrar_respuesta(estado, lec["id"], idx, True, grado=1)
             print("  ✔ mejoró con la pista. Vuelve a repaso pronto.")
             return
@@ -152,9 +180,9 @@ def _evaluar_desde_cli(lec, pregunta):
     print(f"\n  [diagnóstico] {lec['titulo']}")
     print(f"  ❓ {pregunta['q']}")
     r = pedir("  tu respuesta > ")
-    acierto = evaluar_respuesta_cli(pregunta, r)
+    acierto, conf, razon, fuente = evaluar_respuesta_cli(pregunta, r, lec)
     if not acierto:
-        print(f"  (respuesta esperada: {pregunta['a']})")
+        print(f"  (respuesta esperada: {pregunta['a']}) [vía {fuente}]")
     return {"acierto": acierto}
 
 
@@ -210,8 +238,17 @@ def main():
                         help="qué hacer")
     parser.add_argument("--id", help="id de lección para 'clase' (ej: c03)")
     parser.add_argument("--curso", help="ruta al JSON del curso (default: curso_premiere.json)")
+    parser.add_argument("--matcher", action="store_true",
+                        help="fuerza evaluación por claves (sin capa LLM)")
+    parser.add_argument("--http", action="store_true",
+                        help="fuerza backend LLM HTTP (requiere TUTOR_LLM_* en env)")
     parser.add_argument("--dias", type=int, default=5, help="días a simular en 'demo'")
     args = parser.parse_args()
+
+    if args.matcher:
+        estrategia._forzar = "matcher"
+    elif args.http:
+        estrategia._forzar = "http"
 
     curso = cargar_curso(args.curso)
     # Estado file per-course to avoid mixing progress
