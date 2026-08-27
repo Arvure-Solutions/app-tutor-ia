@@ -11,15 +11,19 @@ from modelo import (ESTADO_PATH, UMBRAL_MAESTRIA, cargar_estado, clave_tarjeta,
                     guardar_estado, marcar_vista, nuevo_estado,
                     preguntas_de_leccion, registrar_respuesta, resumen_alumno,
                     tarjetas_vencidas, validar_curso, evaluar_respuesta,
-                    MatcherClaves, diagnosticar, leccion_siguiente,
+                    MatcherClaves, EstrategiaLLM, diagnosticar, leccion_siguiente,
                     orden_topologico, prereqs_cumplidos)
+import modelo
 
 RAIZ = Path(__file__).resolve().parent
-CURSO_PATH = RAIZ / "curso_premiere.json"
+CURSO_DEFAULT = RAIZ / "curso_premiere.json"
 
 
-def cargar_curso():
-    raw = json.loads(CURSO_PATH.read_text(encoding="utf-8"))
+def cargar_curso(ruta=None):
+    curso_path = Path(ruta) if ruta else CURSO_DEFAULT
+    if not curso_path.is_absolute():
+        curso_path = RAIZ / curso_path
+    raw = json.loads(curso_path.read_text(encoding="utf-8"))
     problema = validar_curso(raw)
     if problema:
         print(f"❌ Curso inválido: {problema}", file=sys.stderr)
@@ -66,7 +70,8 @@ def preguntar(estado, lec, idx, primera_vez):
     r1 = pedir("  tu respuesta > ")
     ok = evaluar_respuesta_cli(p, r1)
     if not ok:
-        print("  💡 pista:", p.get("pistas", ["repasá la teoría de la clase"])[0])
+        pistas = p.get("pistas", []) or ["repasá la teoría de la clase"]
+        print("  💡 pista:", pistas[0])
         r2 = pedir("  otra chance > ")
         if evaluar_respuesta_cli(p, r2):
             registrar_respuesta(estado, lec["id"], idx, True, grado=1)
@@ -204,10 +209,15 @@ def main():
     parser.add_argument("comando", choices=["estado", "clase", "sesion", "repaso", "diagnostico", "demo", "reset"],
                         help="qué hacer")
     parser.add_argument("--id", help="id de lección para 'clase' (ej: c03)")
+    parser.add_argument("--curso", help="ruta al JSON del curso (default: curso_premiere.json)")
     parser.add_argument("--dias", type=int, default=5, help="días a simular en 'demo'")
     args = parser.parse_args()
 
-    curso = cargar_curso()
+    curso = cargar_curso(args.curso)
+    # Estado file per-course to avoid mixing progress
+    curso_nombre = curso.get("curso", "default").replace(" ", "_").replace("-", "_").lower()
+    import modelo
+    modelo.ESTADO_PATH = RAIZ / f"estado_{curso_nombre}.json"
     estado = None
     try:
         estado = cargar_estado()
@@ -226,8 +236,8 @@ def main():
     elif args.comando == "demo":
         cmd_demo(estado, curso, args.dias)
     elif args.comando == "reset":
-        if ESTADO_PATH.exists() and confirmar("¿Borrar TODO el progreso? (s/n) > "):
-            ESTADO_PATH.unlink()
+        if modelo.ESTADO_PATH.exists() and confirmar("¿Borrar TODO el progreso? (s/n) > "):
+            modelo.ESTADO_PATH.unlink()
             print("  Estado eliminado.")
         else:
             print("  Cancelado.")

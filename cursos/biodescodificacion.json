@@ -1,0 +1,265 @@
+{
+  "curso": "biodescodificacion",
+  "nivel": "personalizado",
+  "lecciones": [
+    {
+      "id": "b01",
+      "titulo": "Qué es la biodescodificación y por qué el cuerpo \"habla\"",
+      "objetivo": "Entender el principio central: cada síntoma es un conflicto biológico, no una avería aleatoria",
+      "prereqs": [],
+      "teoria": [
+        "La biodescodificación (Hammer, Rueda) sostiene que enfermedad = mensaje inconsciente que el cuerpo materializa",
+        "No es \"culpabilizar al paciente\": es entender que el sistema nervioso, endocrino e inmune responden a emociones reprimidas",
+        "Ejemplo: un nudo en el estómago antes de una exposición — el cuerpo ya reaccionó antes de que la mente lo procesara",
+        "El síntoma tiene DOBLE sentido: contexto biológico (qué células/tiempo) + sentido emocional (qué conflicto)",
+        "No toda enfermedad es 100% emocional: hay factores ambientales, genéticos, epigenéticos. La bio es una capa más, no la única"
+      ],
+      "practica": "- Pensá en un síntoma que tengas o hayas tenido y escribí: ¿en qué situación emocional recurrente apareció?",
+      "preguntas": [
+        {
+          "q": "Cuál es el principio central de la biodescodificación",
+          "a": "Que cada síntoma tiene un doble sentido: biológico y emocional",
+          "claves": [
+            "principio",
+            "doble sentido"
+          ],
+          "pistas": []
+        },
+        {
+          "q": "La biodescodificación significa que la enfermedad es \"culpa del paciente\"",
+          "a": "No: es entender la relación mente-cuerpo sin culpa",
+          "claves": [
+            "culpa",
+            "no es"
+          ],
+          "pistas": []
+        }
+      ]
+    },
+    {
+      "id": "b02",
+      "titulo": "Mapa del cuerpo y sus significados",
+      "objetivo": "Conocer las asociaciones más consistentes entre zonas del cuerpo y conflictos emocionales",
+      "prereqs": [
+        "b01"
+      ],
+      "teoria": [
+        "Manos = acción, control, manipulación. Tensión en manos: \"necesito hacer algo que no puedo/hago\"",
+        "Garganta = expresión, comunicación, ser escuchado. Anginas repetitivas: \"hay algo que necesito decir y no digo\"",
+        "Espalda alta = carga, responsabilidad. \"Cargo cosas que no me corresponden\"",
+        "Estómago = digestión emocional, aceptación/rechazo. Gastritis: \"no puedo digerir esta situación\"",
+        "Rodillas = sometimiento, orgullo, flexibilidad. \"Me cuesta arrodillarme/pedir\"",
+        "Piel = límites, contacto, identidad. Eccema: \"algo me toca/invade que no quiero\""
+      ],
+      "practica": "- Con el mapa, identificá 2 síntomas propios o de alguien cercano y buscá el patrón emocional",
+      "preguntas": [
+        {
+          "q": "Qué zona del cuerpo se asocia a la comunicación no expresada",
+          "a": "La garganta y las amígdalas",
+          "claves": [
+            "garganta",
+            "comunicar"
+          ],
+          "pistas": []
+        },
+        {
+          "q": "La espalda alta representa la carga y responsabilidad",
+          "a": "Sí, \"cargo cosas que no me corresponden\"",
+          "claves": [
+            "espalda",
+            "carga"
+          ],
+          "pistas": []
+        },
+        {
+          "q": "Las rodillas tienen que ver con sometimiento y orgullo",
+          "a": "Sí: me cuesta arrodillarme/pedir",
+          "claves": [
+            "rodillas",
+            "orgullo"
+          ],
+          "pistas": []
+        }
+      ]
+    },
+    {
+      "id": "b03",
+      "titulo": "Lateralidad: izquierda vs derecha y la--",
+      "objetivo": "Distinguir los conflictos según el lado del cuerpo afectado",
+      "prereqs": [
+        "b02"
+      ],
+      "teoria": [
+        "Regla general: lado derecho = conflicto con padre/autoridad/masculino; lado izquierdo = conflicto con madre/afecto/femenino",
+        "Ejemplo: tendinitis derecha → conflicto con el padre/jefe; tendinitis izquierda → conflicto con la madre/pareja",
+        "La lateralidad NO es absoluta: hay excepciones y matices. Es una guía, no una ley",
+        "En niños: derecha = conflicto con el padre; izquierda = con la madre (antes de laPubertad la lateralidad no está consolidada)",
+        "Ojos: derecho = lo que veo del padre; izquierdo = lo que veo de la madre"
+      ],
+      "practica": "- Pensá en un dolor de lado específico. ¿Quién de tu entorno está asociado a ese lado?",
+      "preguntas": [
+        {
+          "q": "Si tengo tendinitis en la mano derecha, ¿con quién suele estar el conflicto",
+          "a": "Con padre, autoridad o figura masculina",
+          "claves": [
+            "derecha",
+            "padre"
+          ],
+          "pistas": []
+        },
+        {
+          "q": "La lateralidad es una ley absoluta sin excepciones",
+          "a": "No: es una guía con matices",
+          "claves": [
+            "excepcion",
+            "no absoluta"
+          ],
+          "pistas": []
+        }
+      ]
+    },
+    {
+      "id": "b04",
+      "titulo": "Fases de la enfermedad:/conflicto activo,alejamiento y resolución",
+      "objetivo": "Entender los 3 momentos de todo proceso de enfermedad según la biodescodificación",
+      "prereqs": [
+        "b02",
+        "b03"
+      ],
+      "teoria": [
+        "Fase 1 (conflicto activo): síntomas compatibles con \"estrés agudo\" — insomnio, pérdida de apetito, diarrea, taquicardia. El cuerpo está en modo supervivencia",
+        "Fase 2 (alejamiento/resolución parcial): el conflicto se resuelve parcialmente; el cuerpo intenta reparar → síntomas de \"curación\" — fatiga, inflamación, retención de líquidos, fiebre",
+        "Fase 3 (resolución completa): síntoma desaparece o se estabiliza. Si el conflicto se repite, el ciclo vuelve a activarse",
+        "La clave es identificar en qué fase estás: no todo síntoma es conflicto activo; algunos son la respuesta de curación",
+        "Si durante la \"curación\" aparece un nuevo síntoma: es otro conflicto que se activó, no una recaída del primero"
+      ],
+      "practica": "- Para un síntoma actual, clasificá: ¿está en fase activa (estrés) o de curación (reparación)? ¿Qué lo activó?",
+      "preguntas": [
+        {
+          "q": "Cuáles son las 3 fases de un proceso de enfermedad",
+          "a": "Conflicto activo, alejamiento/resolución parcial, resolución completa",
+          "claves": [
+            "activo",
+            "alejamiento",
+            "resolucion"
+          ],
+          "pistas": []
+        },
+        {
+          "q": "Si durante la curación aparece un nuevo síntoma es siempre recaída del mismo conflicto",
+          "a": "No: puede ser otro conflicto distinto que se activó",
+          "claves": [
+            "nuevo conflicto",
+            "no recaida"
+          ],
+          "pistas": []
+        },
+        {
+          "q": "Fase activa se caracteriza por insomnio y pérdida de apetito",
+          "a": "Sí: síntomas de estrés agudo, modo supervivencia",
+          "claves": [
+            "activo",
+            "estres",
+            "insomnio"
+          ],
+          "pistas": []
+        }
+      ]
+    },
+    {
+      "id": "b05",
+      "titulo": "Emociones reprimidas: cómo识别 y empezar a liberar",
+      "objetivo": "Aprender a identificar emociones reprimidas que alimentan los síntomas",
+      "prereqs": [
+        "b03",
+        "b04"
+      ],
+      "teoria": [
+        "Las emociones reprimidas no desaparecen: se acumulan en el cuerpo como tensión crónica",
+        "Señales de represión: \"estoy bien\" automático, incapacidad de decir no, rigidez postural, respiración superficial",
+        "El proceso de liberación: 1) Reconocer (\"estoy sintiendo esto\"), 2) Nombrar (etiquetar la emoción), 3) Expresar (hablar, escribir, llorar, mover)",
+        "No se trata de \"desahogarse\" sin control, sino de permitir que la emoción pase por el cuerpo",
+        "Journaling emocional: 5 minutos al día escribiendo lo que sentís sin filtro. Efecto comprobado en reducir síntomas psicosomáticos",
+        "La rigidización del cuerpo es el registro de las emociones no procesadas"
+      ],
+      "practica": "- Hacé 5 minutos de journaling emocional: escribí sin filtro lo que sentís hoy. ¿Qué emociones aparecieron?",
+      "preguntas": [
+        {
+          "q": "Las emociones reprimidas se acumulan en el cuerpo como",
+          "a": "Tensión crónica, no como energía libre",
+          "claves": [
+            "tension",
+            "acumulan"
+          ],
+          "pistas": []
+        },
+        {
+          "q": "Journaling emocional significa escribir lo que sentís sin filtro 5 minutos al día",
+          "a": "Sí: sin censura, solo registrar",
+          "claves": [
+            "journaling",
+            "sin filtro"
+          ],
+          "pistas": []
+        },
+        {
+          "q": "\"Estoy bien\" automático es señal de qué proceso",
+          "a": "De represión emocional: negar lo que se siente",
+          "claves": [
+            "represion",
+            "niego"
+          ],
+          "pistas": []
+        }
+      ]
+    },
+    {
+      "id": "b06",
+      "titulo": "Creando tu propio protocolo de descodificación personal",
+      "objetivo": "Armá un sistema simple para interpretar tus propios síntomas sin depender de un terapeuta para cada cosa",
+      "prereqs": [
+        "b04",
+        "b05"
+      ],
+      "teoria": [
+        "Tu protocolo en 4 pasos: 1) Localizar el síntoma (zona + lado), 2) Mapear con el mapa corporal, 3) Cruzar con lateralidad, 4) Preguntar \"¿qué conflicto vivo?\"",
+        "El diario de síntomas: registrar fecha, síntoma, lado, emoción previa, situación detonante. Con el tiempo aparecen patrones",
+        "No substituye terapeuta: es complemento. Si un síntoma persiste más de 3 semanas o es severo, consultá profesional",
+        "Los patrones se ven mejor con 3+ registros. Un síntoma aislado puede ser ruido; tres del mismo tipo son señal",
+        "La salud no es ausencia de síntoma: es capacidad de procesar emociones y recuperarse"
+      ],
+      "practica": "- Armá tu diario de síntomas: 3 columnas (fecha, síntoma, qué estaba sintiendo). Llevalo 1 semana",
+      "preguntas": [
+        {
+          "q": "Cuál es el protocolo en 4 pasos para interpretar un síntoma",
+          "a": "Localizar, mapear con mapa corporal, cruzar lateralidad, preguntar conflicto",
+          "claves": [
+            "localizar",
+            "mapear",
+            "lateralidad",
+            "conflicto"
+          ],
+          "pistas": []
+        },
+        {
+          "q": "Si un síntoma persiste más de 3 semanas, ¿qué hacer",
+          "a": "Consultar profesional: no reemplaza terapeuta",
+          "claves": [
+            "3 semanas",
+            "profesional"
+          ],
+          "pistas": []
+        },
+        {
+          "q": "Un síntoma aislado es siempre señal de conflicto emocional",
+          "a": "No: puede ser ruido; 3+ registros son más confiables",
+          "claves": [
+            "aislado",
+            "ruido"
+          ],
+          "pistas": []
+        }
+      ]
+    }
+  ]
+}
