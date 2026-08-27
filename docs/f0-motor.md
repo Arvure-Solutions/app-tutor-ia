@@ -105,10 +105,46 @@ TUTOR_LLM=http TUTOR_LLM_BASE_URL=http://localhost:11434/v1 TUTOR_LLM_MODEL=llam
   python3 tutor.py sesion --http
 ```
 
-## Pendientes hacia F2
+## F2 — UI web mínima + loop diario proactivo con voz (2026-08-27)
 
-- Voz / check-in desktop (loop diario proactivo)
+Lleva el motor F1 a dos superficies nuevas sin dependencias externas
+(solo stdlib, $0, no carga la máquina).
+
+- **`motor/sesion.py`** — núcleo reutilizable (fuente única para CLI, web y loop):
+  `armar_cola` (retrieval-first), `responder`/`segundo_intento` (escalera
+  socrática), `abrir_clase`, `briefing`, `reporte`, `voz_hablar`. No imprime:
+  devuelve dicts que cada superficie consume.
+- **UI web (`motor/web.py`)** — servidor `http.server` + `ThreadingHTTPServer`,
+  dashboard HTML con barras de maestría, lección abierta y sesión retrieval-first
+  interactiva. API JSON en `/api/*` (estado, clase, sesion, responder, segundo,
+  loop, reset). **Cero dependencias**: `python3 web.py [puerto]` →
+  http://localhost:8000.
+- **Loop diario proactivo** (`tutor.py loop`): briefing → (clase si hace falta)
+  → sesión → reporte. Con `--voz` usa `say` nativo de macOS para hablar el
+  briefing y el reporte (offline, $0). En otros SO `say` no existe → no-op.
+- CLI refactorizado para usar `sesion.py` (comportamiento idéntico al F1) y
+  con el nuevo comando `loop`.
+
+Uso:
+```bash
+cd motor
+python3 -m pytest tests/ -q          # 43 tests verdes (incl. web headless)
+
+# Web local
+python3 web.py 8000                  # abrí http://localhost:8000
+
+# Loop diario proactivo (con voz en macOS)
+python3 tutor.py loop --voz
+
+# Igual que antes
+python3 tutor.py clase
+python3 tutor.py sesion
+```
+
+## Pendientes hacia F3
+
 - Empaquetador md→curso: `motor/empaquetar.py` ya existe en el repo (md → curso JSON)
 - Métricas de retención y reporte al alumno
+- Persistencia multi-alumno / perfiles
 
 

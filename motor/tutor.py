@@ -1,23 +1,50 @@
 import argparse
 import json
 import random
-import re
 import sys
-from datetime import timedelta
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
 from modelo import (ESTADO_PATH, UMBRAL_MAESTRIA, cargar_estado, clave_tarjeta,
-                    guardar_estado, marcar_vista, nuevo_estado,
-                    preguntas_de_leccion, registrar_respuesta, resumen_alumno,
-                    tarjetas_vencidas, validar_curso, evaluar_respuesta,
-                    MatcherClaves, EstrategiaLLM, diagnosticar, leccion_siguiente,
-                    orden_topologico, prereqs_cumplidos)
+                    guardar_estado, nuevo_estado, preguntas_de_leccion,
+                    resumen_alumno, tarjetas_vencidas, validar_curso,
+                    MatcherClaves, EstrategiaLLM, EstrategiaEvaluacion,
+                    diagnosticar, leccion_siguiente, leccion_por_id,
+                    prereqs_cumplidos, marcar_vista)
 import modelo
+import sesion
 
 RAIZ = Path(__file__).resolve().parent
 CURSO_DEFAULT = RAIZ / "curso_premiere.json"
 
+
+# ---------------------------------------------------------------------------
+# Estrategia (con override --matcher / --http) — única fuente para CLI+web
+# ---------------------------------------------------------------------------
+
+_estrategia = None
+
+
+def estrategia():
+    global _estrategia
+    if _estrategia is None:
+        if getattr(estrategia, "_forzar", None) == "matcher":
+            class _M(EstrategiaEvaluacion):
+                def evaluar(self, pregunta, respuesta, leccion=None):
+                    return (*MatcherClaves().evaluar(pregunta, respuesta), "matcher")
+            _estrategia = _M()
+        else:
+            _estrategia = EstrategiaLLM()
+    return _estrategia
+
+
+def set_estrategia_forzar(modo):
+    estrategia._forzar = modo
+
+
+# ---------------------------------------------------------------------------
+# CLI helpers
+# ---------------------------------------------------------------------------
 
 def cargar_curso(ruta=None):
     curso_path = Path(ruta) if ruta else CURSO_DEFAULT
@@ -29,46 +56,6 @@ def cargar_curso(ruta=None):
         print(f"❌ Curso inválido: {problema}", file=sys.stderr)
         sys.exit(1)
     return raw
-
-
-def leccion_por_id(curso, cid):
-    for l in curso["lecciones"]:
-        if l["id"] == cid:
-            return l
-    return None
-
-
-def evaluar_respuesta_cli(pregunta, respuesta, lec=None):
-    """Devuelve (acierto, confianza, razon, fuente). Por defecto usa EstrategiaLLM
-    (MockLLMClient offline); si se activa TUTOR_LLM=http usa un modelo real y
-    cae al matcher si la llamada falla."""
-    res = estrategia().evaluar(pregunta, respuesta, lec)
-    if len(res) == 4:
-        return res
-    # matcher devuelve 3-tuple
-    acierto, conf, razon = res
-    return acierto, conf, razon, "matcher"
-
-
-_estrategia = None
-
-
-def estrategia():
-    global _estrategia
-    if _estrategia is None:
-        if getattr(estrategia, "_forzar", None) == "matcher":
-            from modelo import MatcherClaves, EstrategiaEvaluacion
-            class _M(EstrategiaEvaluacion):
-                def evaluar(self, pregunta, respuesta, leccion=None):
-                    return (*MatcherClaves().evaluar(pregunta, respuesta), "matcher")
-            _estrategia = _M()
-        elif getattr(estrategia, "_forzar", None) == "http":
-            import os
-            os.environ["TUTOR_LLM"] = "http"
-            _estrategia = EstrategiaLLM()
-        else:
-            _estrategia = EstrategiaLLM()
-    return _estrategia
 
 
 def pedir(prompt):
@@ -92,26 +79,9 @@ def mostrar_leccion(lec):
     print(f"\n  PRÁCTICA: {lec['practica']}")
 
 
-def preguntar(estado, lec, idx, primera_vez):
-    p = lec["preguntas"][idx]
-    print(f"\n  ❓ {p['q']}")
-    r1 = pedir("  tu respuesta > ")
-    acierto, conf, razon, fuente = evaluar_respuesta_cli(p, r1, lec)
-    if not acierto:
-        pista = estrategia().pista(lec, p, r1)
-        print(f"  💡 pista ({fuente}): {pista}")
-        r2 = pedir("  otra chance > ")
-        if evaluar_respuesta_cli(p, r2, lec)[0]:
-            registrar_respuesta(estado, lec["id"], idx, True, grado=1)
-            print("  ✔ mejoró con la pista. Vuelve a repaso pronto.")
-            return
-        grado = 0
-        print(f"  ✘ Por ahí no es. Respuesta: {p['a']}")
-    else:
-        grado = 3 if primera_vez and random.random() < 0.15 else 2
-        print("  ✔ Correcto." if grado == 2 else "  ✔ Correcto, y fluido: intervalo largo.")
-    registrar_respuesta(estado, lec["id"], idx, grado != 0, grado=grado)
-
+# ---------------------------------------------------------------------------
+# Comandos
+# ---------------------------------------------------------------------------
 
 def cmd_estado(estado, curso):
     if estado is None:
@@ -134,15 +104,11 @@ def cmd_estado(estado, curso):
 
 
 def cmd_clase(estado, curso, cid=None):
-    if estado is None:
-        estado = nuevo_estado()
-    lec = leccion_por_id(curso, cid) if cid else leccion_siguiente(curso, estado)
+    lec, estado = sesion.abrir_clase(curso, estado, cid)
     if lec is None:
         print("\n  Nada desbloqueado: primero repasá lo vencido (tutor.py sesion).\n")
         return
     mostrar_leccion(lec)
-    marcar_vista(estado, lec["id"])
-    guardar_estado(estado)
     print(f"\n  Marcada como vista ({lec['id']}). Ahora fijala con: tutor.py sesion\n")
 
 
@@ -150,37 +116,37 @@ def cmd_sesion(estado, curso, solo_repaso=False):
     if estado is None:
         print("\n  Primero abrí una lección: tutor.py clase\n")
         return
+    cola, lec = sesion.armar_cola(curso, estado, solo_repaso)
     vencidas = tarjetas_vencidas(curso, estado)
-    cola = list(vencidas[:4])
-    lec = leccion_siguiente(curso, estado) if not solo_repaso else None
-    if lec and not solo_repaso:
-        cola += [(lec["id"], i) for i in preguntas_de_leccion(curso, estado, lec, cantidad=3)]
     if not cola:
         print("\n  ✨ Nada vencido y sin lección nueva disponible. Volvé mañana o abrí otra clase.\n")
         return
-    # mezclar solo las NUEVAS (después de las vencidas) para variar el orden
-    fijas = cola[:4]
-    nuevas = cola[4:]
-    random.shuffle(nuevas)
-    cola = fijas + nuevas
     print(f"\n  Sesión retrieval-first: {len(vencidas)} repasos vencidos"
           + (f" + nuevas de {lec['titulo']}" if lec else ""))
     for n, (cid, idx) in enumerate(cola, 1):
         l = leccion_por_id(curso, cid)
-        nueva = clave_tarjeta(cid, idx) not in estado["tarjetas"]
-        etiqueta = "NUEVA" if nueva else "REPASO"
+        etiqueta = "NUEVA" if clave_tarjeta(cid, idx) not in estado["tarjetas"] else "REPASO"
         print(f"\n  [{n}/{len(cola)}] ({etiqueta} · {l['titulo']})")
-        preguntar(estado, l, idx, nueva)
-    guardar_estado(estado)
-    cmd_estado(estado, curso)
+        preguntar(estado, l, idx, etiqueta == "NUEVA")
+
+
+def preguntar(curso, estado, lec, idx, primera_vez):
+    p = lec["preguntas"][idx]
+    print(f"\n  ❓ {p['q']}")
+    r1 = pedir("  tu respuesta > ")
+    r = sesion.responder(curso, estado, lec["id"], idx, r1)
+    if not r["acierto"]:
+        print(f"  💡 {r['mensaje']} ({r['fuente']}): {r['pista']}")
+        r2 = pedir("  otra chance > ")
+        r = sesion.segundo_intento(curso, estado, lec["id"], idx, r2)
+    print(f"  {'✔' if r['acierto'] else '✘'} {r['mensaje']}")
 
 
 def _evaluar_desde_cli(lec, pregunta):
-    """Adaptador CLI para diagnosticar(): pide la respuesta por stdin."""
     print(f"\n  [diagnóstico] {lec['titulo']}")
     print(f"  ❓ {pregunta['q']}")
     r = pedir("  tu respuesta > ")
-    acierto, conf, razon, fuente = evaluar_respuesta_cli(pregunta, r, lec)
+    acierto, conf, razon, fuente = estrategia().evaluar(pregunta, r, lec)
     if not acierto:
         print(f"  (respuesta esperada: {pregunta['a']}) [vía {fuente}]")
     return {"acierto": acierto}
@@ -232,28 +198,53 @@ def cmd_demo(estado, curso, dias=5):
     print("  (estado demo guardado; usá 'reset' para volver a cero)\n")
 
 
+def cmd_loop(estado, curso, hablar=False):
+    print("\n  🔄 Loop diario proactivo\n")
+    out = sesion.loop_diario(curso, estado, hablar=hablar)
+    for nombre, contenido in out["pasos"]:
+        if nombre in ("briefing", "reporte", "clase", "sesion"):
+            if isinstance(contenido, str):
+                print(f"  [{nombre}] {contenido}")
+            elif isinstance(contenido, list):
+                for item in contenido:
+                    marca = "✔" if item["acierto"] else "✘"
+                    print(f"    {marca} {item['etiqueta']} · {item['leccion']}: {item['mensaje']}")
+    print()
+    cmd_estado(out["estado"], curso)
+
+
+# ---------------------------------------------------------------------------
+# main
+# ---------------------------------------------------------------------------
+
+curso_g = None  # accesible para preguntar()
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Tutor IA F0 — motor pedagógico CLI")
-    parser.add_argument("comando", choices=["estado", "clase", "sesion", "repaso", "diagnostico", "demo", "reset"],
+    global curso_g
+    parser = argparse.ArgumentParser(description="Tutor IA — motor pedagógico CLI")
+    parser.add_argument("comando", choices=["estado", "clase", "sesion", "repaso",
+                        "diagnostico", "loop", "demo", "reset"],
                         help="qué hacer")
     parser.add_argument("--id", help="id de lección para 'clase' (ej: c03)")
     parser.add_argument("--curso", help="ruta al JSON del curso (default: curso_premiere.json)")
-    parser.add_argument("--matcher", action="store_true",
-                        help="fuerza evaluación por claves (sin capa LLM)")
-    parser.add_argument("--http", action="store_true",
-                        help="fuerza backend LLM HTTP (requiere TUTOR_LLM_* en env)")
+    parser.add_argument("--matcher", action="store_true", help="fuerza evaluación por claves")
+    parser.add_argument("--http", action="store_true", help="fuerza backend LLM HTTP")
+    parser.add_argument("--voz", action="store_true", help="loop diario habla con voz (macOS say)")
     parser.add_argument("--dias", type=int, default=5, help="días a simular en 'demo'")
     args = parser.parse_args()
 
     if args.matcher:
-        estrategia._forzar = "matcher"
+        set_estrategia_forzar("matcher")
     elif args.http:
-        estrategia._forzar = "http"
+        import os
+        os.environ["TUTOR_LLM"] = "http"
+        set_estrategia_forzar("http")
 
     curso = cargar_curso(args.curso)
-    # Estado file per-course to avoid mixing progress
+    curso_g = curso
+    # Estado aislado por curso
     curso_nombre = curso.get("curso", "default").replace(" ", "_").replace("-", "_").lower()
-    import modelo
     modelo.ESTADO_PATH = RAIZ / f"estado_{curso_nombre}.json"
     estado = None
     try:
@@ -270,6 +261,8 @@ def main():
         cmd_sesion(estado, curso, solo_repaso=(args.comando == "repaso"))
     elif args.comando == "diagnostico":
         cmd_diagnostico(estado, curso)
+    elif args.comando == "loop":
+        cmd_loop(estado, curso, hablar=args.voz)
     elif args.comando == "demo":
         cmd_demo(estado, curso, args.dias)
     elif args.comando == "reset":

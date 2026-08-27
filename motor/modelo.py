@@ -125,6 +125,13 @@ def clave_tarjeta(cid, idx):
     return f"{cid}::{idx}"
 
 
+def leccion_por_id(curso, cid):
+    for l in curso["lecciones"]:
+        if l["id"] == cid:
+            return l
+    return None
+
+
 def asegurar_concepto(estado, cid):
     return estado["conceptos"].setdefault(cid, concepto_nuevo())
 
