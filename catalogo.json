@@ -1,0 +1,41 @@
+{
+  "plataforma": "Tutor IA — plataforma de aprendizaje",
+  "bienvenida": "¿Qué querés aprender hoy?",
+  "dominios": [
+    {
+      "id": "edicion_video",
+      "nombre": "Edición de video",
+      "icono": "🎬",
+      "descripcion": "Premiere, DaVinci, CapCut: cortar, color, audio, exportar.",
+      "ejemplos": ["montaje básico en Premiere", "color con Lumetri", "audio y J/L cuts"]
+    },
+    {
+      "id": "guitarra",
+      "nombre": "Guitarra",
+      "icono": "🎸",
+      "descripcion": "De cero: acordes, rasgueo, escalas y primeras canciones.",
+      "ejemplos": ["acordes básicos", "rasgueo para principiantes", "escala de Do mayor"]
+    },
+    {
+      "id": "canto",
+      "nombre": "Canto",
+      "icono": "🎤",
+      "descripcion": "Técnica vocal, respiración, afinación y calentamiento.",
+      "ejemplos": ["respiración diafragmática", "afinar con el oído", "calentamiento vocal"]
+    },
+    {
+      "id": "durlock",
+      "nombre": "Durlock / construcción en seco",
+      "icono": "🧱",
+      "descripcion": "Montar paredes de durlock, masillar, terminación y pintura.",
+      "ejemplos": ["montar estructura de durlock", "masillar y lijar", "curar juntas"]
+    },
+    {
+      "id": "electricidad",
+      "nombre": "Electricidad doméstica",
+      "icono": "⚡",
+      "descripcion": "Seguridad, circuitos, conexiones y luces sin morir en el intento.",
+      "ejemplos": ["instalar un tomacorriente", "cablear un interruptor", "ley de Ohm aplicada"]
+    }
+  ]
+}

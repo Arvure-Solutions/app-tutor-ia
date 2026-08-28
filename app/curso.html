@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tutor IA · Curso</title>
+<style>
+  :root{--bg:#0f1115;--card:#161b27;--card2:#1c2230;--fg:#e7e9ee;--mut:#9aa4b2;
+        --acc:#4f8cff;--acc2:#7c5cff;--ok:#5fd38a;--bord:#222a3a}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);
+       color:var(--fg);max-width:820px;margin:0 auto;padding:1rem 1.1rem 4rem}
+  header{display:flex;align-items:center;gap:.6rem;margin-bottom:1rem}
+  header a{color:var(--mut);text-decoration:none;font-size:.9rem}
+  h1{font-size:1.3rem;margin:.2rem 0}
+  .bar{background:var(--card2);height:10px;border-radius:6px;overflow:hidden;margin:2px 0 8px}
+  .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+  .row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;
+       border-bottom:1px solid #1a2030}
+  .m{color:var(--mut);font-variant-numeric:tabular-nums}
+  .ok{color:var(--ok)} .lock{color:var(--mut)} .book{color:var(--acc)}
+  button{cursor:pointer;border:0;border-radius:8px;padding:.6rem 1rem;background:var(--acc);
+         color:#fff;font-weight:600;margin:.3rem .3rem .3rem 0}
+  button.sec{background:var(--card2);color:var(--fg)}
+  .q{background:var(--card);border:1px solid var(--bord);border-radius:12px;padding:1rem;margin:.7rem 0}
+  input[type=text]{width:100%;padding:.6rem;border-radius:8px;border:1px solid var(--bord);
+       background:#0f1115;color:var(--fg)}
+  .msg{margin-top:.5rem;font-size:.95rem}
+  .pill{display:inline-block;font-size:.7rem;padding:2px 8px;border-radius:999px;
+        background:var(--card2);color:var(--mut);margin-left:.4rem}
+  a.vid{color:var(--acc);text-decoration:none}
+  pre{background:var(--card);padding:.8rem;border-radius:8px;overflow:auto;white-space:pre-wrap}
+  h2{font-size:1.05rem;margin-top:1.6rem;border-bottom:1px solid var(--bord);padding-bottom:.3rem}
+</style></head>
+<body>
+<header>
+  <a href="portal.html">← Portal</a>
+  <span id="ruta"></span>
+</header>
+<h1 id="titulo"></h1>
+
+<h2>Maestría por lección</h2>
+<div id="maestria"></div>
+
+<h2>Sesión de hoy</h2>
+<div>
+  <button onclick="abrirClase()">▶ Abrir lección</button>
+  <button class="sec" onclick="iniciarSesion()">🔁 Sesión retrieval-first</button>
+</div>
+<div id="leccion"></div>
+<div id="sesion"></div>
+
+<h2>💬 Preguntale al tutor</h2>
+<div class="q">
+  <div class="m">Lección de contexto:</div>
+  <select id="selCons"></select>
+  <div class="m" style="margin-top:.4rem">Tu consulta:</div>
+  <input type="text" id="txtCons" placeholder="ej: por dónde arranco? qué necesito?">
+  <button onclick="consultar()">Preguntar</button>
+  <div class="msg" id="respCons"></div>
+</div>
+
+<h2>Reporte</h2>
+<div id="reporte"></div>
+
+<script>
+const qs=new URLSearchParams(location.search);
+const slug=qs.get('slug');
+const api=async(p,body)=>{const r=await fetch(`/api/curso/${slug}/${p}`,
+  {method:body?'POST':'GET',headers:{'Content-Type':'application/json'},
+   body:body?JSON.stringify(body):null}); return r.json();};
+async function cargar(){
+  const e=await api('estado');
+  document.getElementById('titulo').textContent=e.alumno||'Curso';
+  document.getElementById('ruta').textContent='· '+slug;
+  const m=document.getElementById('maestria'); m.innerHTML='';
+  const sc=document.getElementById('selCons'); sc.innerHTML='';
+  (e.lecciones||[]).forEach(l=>{
+    const mk=l.dominada?'🏆':(l.visto?'📖':'🔒');
+    m.innerHTML+=`<div class="row"><span>${mk} ${l.id} · ${l.titulo}</span>
+      <span class="m">${l.maestria}%</span>
+      <button onclick="abrirClase('${l.id}')">Abrir</button></div>
+      <div class="bar"><i style="width:${l.maestria}%"></i></div>`;
+    sc.innerHTML+=`<option value="${l.id}">${l.id} · ${l.titulo}</option>`;
+  });
+}
+async function abrirClase(cid){
+  const r=await api('clase',{cid});
+  const d=document.getElementById('leccion');
+  if(!r.leccion){d.innerHTML='<p class="msg">Nada disponible todavía.</p>';return;}
+  const L=r.leccion;
+  const vids=(L.fuentes||[]).map(v=>`<a class="vid" href="${v.url}" target="_blank" rel="noopener">▶ ${v.titulo}</a>`).join('<br>');
+  d.innerHTML=`<div class="q"><b>${L.id} · ${L.titulo}</b><br>
+    <span class="m">Objetivo:</span> ${L.objetivo}
+    <ul>${L.teoria.map(t=>`<li>${t}</li>`).join('')}</ul>
+    <span class="m">Práctica:</span> ${L.practica}
+    ${vids?`<div style="margin-top:.6rem"><span class="m">🎬 Videos:</span><br>${vids}</div>`:''}</div>`;
+}
+async function iniciarSesion(){
+  const r=await api('sesion',{}); const s=document.getElementById('sesion'); s.innerHTML='';
+  if(!r.cola||!r.cola.length){s.innerHTML='<p class="msg">Nada vencido y sin lección nueva. ✨</p>';return;}
+  r.cola.forEach(item=>{
+    const div=document.createElement('div'); div.className='q';
+    div.innerHTML=`<b>${item.etiqueta} · ${item.titulo}</b><div class="m">${item.q}</div>
+      <input type="text" id="r_${item.cid}_${item.idx}" placeholder="tu respuesta...">
+      <button onclick="responder('${item.cid}',${item.idx})">Responder</button>
+      <div class="msg" id="m_${item.cid}_${item.idx}"></div>`;
+    s.appendChild(div);
+  });
+}
+async function responder(cid,idx){
+  const txt=document.getElementById(`r_${cid}_${idx}`).value;
+  const r=await api('responder',{cid,idx,texto:txt});
+  const el=document.getElementById(`m_${cid}_${idx}`);
+  el.innerHTML=(r.acierto?'✔ <span class="ok">Correcto.</span>'
+    :`💡 ${r.mensaje} <span class="pill">${r.fuente}</span><br>${r.pista||''}`);
+  if(!r.acierto) el.innerHTML+=`<br><input type="text" id="r2_${cid}_${idx}" placeholder="otra chance...">
+    <button onclick="segundo('${cid}',${idx})">Reintentar</button>`;
+  cargar();
+}
+async function segundo(cid,idx){
+  const txt=document.getElementById(`r2_${cid}_${idx}`).value;
+  const r=await api('segundo',{cid,idx,texto:txt});
+  document.getElementById(`m_${cid}_${idx}`).innerHTML=
+    (r.acierto?'✔ <span class="ok">Mejoró.</span>':`✘ ${r.mensaje.replace('Por ahí no es. Respuesta: ','')}`);
+  cargar();
+}
+async function consultar(){
+  const cid=document.getElementById('selCons').value||undefined;
+  const txt=document.getElementById('txtCons').value;
+  const r=await api('consultar',{cid,texto:txt});
+  document.getElementById('respCons').innerHTML=
+    `<b>${r.leccion} · ${r.titulo}</b><br>${(r.respuesta||'').replace(/\\n/g,'<br>')}`;
+}
+cargar();
+</script>
+</body></html>

@@ -44,6 +44,21 @@ class GradeResult:
     fuente: str = "mock"  # 'mock' | 'http' | 'matcher-fallback'
 
 
+# Prompt para sintetizar un curso a partir de videos reales
+_PROMPT_SINTESIS = (
+    "Sos un diseñador instruccional. Dado un TEMA y una lista de VIDEOS reales, "
+    "armá un curso de 4 a 6 lecciones progresivas para un principiante. "
+    "Cada lección debe tener: titulo, objetivo (1 frase), teoria (3-4 puntos "
+    "cortos), practica (1 ejercicio), y 2 preguntas de repaso con 'a' (respuesta "
+    "esperada) y 'claves' (3 palabras clave para evaluar). "
+    "Repartí los VIDEOS entre las lecciones como 'fuentes'. "
+    "Respondé SOLO JSON con esta forma:\n"
+    '{"lecciones":[{"id":"c01","titulo":"...","objetivo":"...","teoria":["..."],'
+    '"practica":"...","preguntas":[{"q":"...","a":"...","claves":["..."]}],'
+    '"fuentes":[{"titulo":"...","url":"...","tipo":"video"}]}]}'
+)
+
+
 class LLMClient:
     """Interfaz de cliente LLM. Subclases: MockLLMClient, HTTPLLMClient."""
 
@@ -51,6 +66,19 @@ class LLMClient:
         raise NotImplementedError
 
     def pista(self, leccion, pregunta, respuesta_alumno) -> str:
+        raise NotImplementedError
+
+    def explicar(self, leccion, consulta_alumno: str) -> str:
+        """Responde una CONSULTA LIBRE del alumno (no una pregunta cerrada del
+        curso) usando la teoría de la lección como contexto. Esto es el canal
+        'preguntas libres': el alumno pregunta en lenguaje natural y el tutor
+        explica basándose en el curso."""
+        raise NotImplementedError
+
+    def sintetizar(self, tema: str, videos: list[dict]) -> dict | None:
+        """Genera el esqueleto JSON de un curso para `tema` usando `videos`
+        reales como fuentes. Devuelve {"lecciones": [...]} o None si no puede
+        (mock offline / sin red)."""
         raise NotImplementedError
 
 
@@ -102,6 +130,30 @@ class MockLLMClient(LLMClient):
             "no coincide con el concepto esperado",
             fuente="mock",
         )
+
+    def sintetizar(self, tema: str, videos: list[dict]) -> dict | None:
+        # mock offline: no sintetiza, el generador usa heurística local
+        return None
+
+    def explicar(self, leccion, consulta_alumno: str) -> str:
+        # mock offline: busca en la teoría los puntos que tocan las palabras
+        # de la consulta; si no hay solap, devuelve la teoría completa como base.
+        consulta = normalizar(consulta_alumno)
+        palabras = {w for w in consulta.split() if len(w) >= 4}
+        if not palabras:
+            palabras = {consulta}
+        teoria = leccion.get("teoria", [])
+        tocados = [t for t in teoria
+                   if palabras & {w for w in normalizar(t).split() if len(w) >= 4}]
+        if tocados:
+            base = "\n".join(f"• {t}" for t in tocados)
+            return (f"(mock offline) De la lección '{leccion['titulo']}':\n{base}\n\n"
+                    f"Si querés algo más específico, conectá un modelo real con "
+                    f"TUTOR_LLM=http.")
+        return (f"(mock offline) En la lección '{leccion['titulo']}' la base es:\n"
+                + "\n".join(f"• {t}" for t in teoria)
+                + "\n\nCon un LLM real (TUTOR_LLM=http) te explico esto en lenguaje "
+                  "natural y respondo tu duda exacta.")
 
     def pista(self, leccion, pregunta, respuesta_alumno) -> str:
         # preferencia: pista currada del curso, si existe
@@ -181,6 +233,41 @@ class HTTPLLMClient(LLMClient):
             ).strip()
         except Exception:
             return leccion["teoria"][0]
+
+    def explicar(self, leccion, consulta_alumno: str) -> str:
+        try:
+            user = (
+                f"LECCIÓN: {leccion['titulo']}\n"
+                f"OBJETIVO: {leccion.get('objetivo', '')}\n"
+                f"TEORÍA DEL CURSO:\n"
+                + "\n".join(f"- {t}" for t in leccion.get("teoria", []))
+                + f"\n\nCONSULTA DEL ALUMNO: {consulta_alumno}\n\n"
+                "Explicá en lenguaje natural, como un tutor de edición de video, "
+                "usando la teoría del curso como base. Sos breve y clarifying. "
+                "Si la consulta pide 'dónde tocar / qué botón', indicá el atajo o "
+                "la herramienta concreta según la teoría."
+            )
+            return self._chat(
+                "Sos un tutor experto de edición de video que explica con claridad "
+                "usando el material del curso. No inventes atajos que no estén en "
+                "la teoría.",
+                user,
+            ).strip()
+        except Exception:
+            return self.pista(leccion, {"q": consulta_alumno}, consulta_alumno)
+
+    def sintetizar(self, tema: str, videos: list[dict]) -> dict | None:
+        try:
+            user = (
+                f"TEMA: {tema}\n\nVIDEOS REALES DISPONIBLES:\n"
+                + "\n".join(f"- {v['titulo']} ({v['url']})" for v in videos)
+                + "\n\nArmá el curso usando esos videos como fuentes."
+            )
+            raw = self._chat(_PROMPT_SINTESIS, user)
+            obj = json.loads(raw)
+            return obj if "lecciones" in obj else None
+        except Exception:
+            return None
 
 
 # ---------------------------------------------------------------------------
