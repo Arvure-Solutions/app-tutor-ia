@@ -26,5 +26,14 @@ Tutor IA con seguimiento continuo: loop diario proactivo (briefing → sesión �
 | [[APP Tutor IA/docs/investigacion/youtube-videos\|youtube-videos]] | 6 videos con transcripciones: NotebookLM admite su hueco de seguimiento; crítica UX de Charlie Gedeon (UI clicable, no chatbot); Sana 3-agentes; Khanmigo accountability |
 | [[APP Tutor IA/docs/investigacion/plataformas-pedagogia\|plataformas-pedagogia]] | Frappe Learning como referencia de curriculum; 10 conceptos pedagógicos traducidos a features (Bloom 2σ, retrieval-first, FSRS vs SM-2, ZPD, hint ladder N0-N3, BKT, interleaving, hábitos) |
 
+## 📁 Archivos del motor
+| Archivo | Qué hace |
+|---|---|
+| [[APP Tutor IA/motor/modelo\|motor/modelo.py]] | 🧠 Cerebro: BKT + FSRS-lite + estado + evaluación (sin deps) |
+| [[APP Tutor IA/motor/tutor\|motor/tutor.py]] | 🖥️ CLI: clase, sesión, repaso, demo, loop, reset |
+| [[APP Tutor IA/motor/empaquetar\|motor/empaquetar.py]] | 📦 Empaquetador: Markdown → JSON de curso |
+| [[APP Tutor IA/cursos/curso_premiere\|cursos/curso_premiere.json]] | 🎬 Curso piloto: Premiere Pro 11 lecciones |
+| [[APP Tutor IA/cursos/biodescodificacion\|cursos/biodescodificacion.json]] | 🧪 Curso de prueba: biodescodificación 6 lecciones |
+
 ## 🔗 Conexiones
 - Mapa general: [[00 CEREBRO]]
